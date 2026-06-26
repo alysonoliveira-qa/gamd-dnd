@@ -94,8 +94,11 @@ export function generateDungeon(params, rng, seed) {
   // loopiness: conexões extras aleatórias
   const extra = Math.floor(rooms.length * options.loopiness);
   for (let k = 0; k < extra && rooms.length > 1; k++) {
-    const [ax, ay] = center(rooms[randInt(rng, 0, rooms.length - 1)]);
-    const [bx, by] = center(rooms[randInt(rng, 0, rooms.length - 1)]);
+    const ia = randInt(rng, 0, rooms.length - 1);
+    let ib = randInt(rng, 0, rooms.length - 2);
+    if (ib >= ia) ib++; // garante salas distintas
+    const [ax, ay] = center(rooms[ia]);
+    const [bx, by] = center(rooms[ib]);
     carveCorridor(m, ax, ay, bx, by, rng);
   }
 
