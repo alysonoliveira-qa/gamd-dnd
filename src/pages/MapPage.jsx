@@ -21,9 +21,14 @@ export default function MapPage() {
     const renderer = new MapRenderer();
     rendererRef.current = renderer;
     let alive = true;
-    renderer.init(hostRef.current).then(() => {
-      if (alive) generate();
-    });
+    renderer
+      .init(hostRef.current)
+      .then(() => {
+        if (alive) generate();
+      })
+      .catch((e) => {
+        if (alive) setError(e.message);
+      });
     return () => {
       alive = false;
       renderer.destroy();

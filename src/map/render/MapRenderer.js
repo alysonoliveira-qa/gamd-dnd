@@ -4,22 +4,29 @@ import { colorFor } from "./theme.js";
 export class MapRenderer {
   constructor() {
     this.app = null;
+    this._destroyed = false;
     this.world = null;
     this.tileSize = 22;
     this._drag = null;
   }
 
   async init(hostEl) {
-    this.app = new Application();
-    await this.app.init({
+    const app = new Application();
+    this.app = app;
+    await app.init({
       background: "#0d0b10",
       resizeTo: hostEl,
       antialias: true,
     });
-    hostEl.appendChild(this.app.canvas);
-
+    // If destroy() ran while init() was awaiting, tear down and bail.
+    if (this._destroyed) {
+      app.destroy(true, { children: true });
+      if (this.app === app) this.app = null;
+      return;
+    }
+    hostEl.appendChild(app.canvas);
     this.world = new Container();
-    this.app.stage.addChild(this.world);
+    app.stage.addChild(this.world);
     this._setupInteraction(hostEl);
   }
 
@@ -89,13 +96,15 @@ export class MapRenderer {
   }
 
   destroy() {
+    this._destroyed = true;
     if (this._onPointerUp) window.removeEventListener("pointerup", this._onPointerUp);
     if (this._onPointerMove) window.removeEventListener("pointermove", this._onPointerMove);
     this._drag = null;
-    if (this.app) {
+    // Only destroy a fully-initialized app (world is set only after init completes).
+    if (this.world) {
       this.app.destroy(true, { children: true });
-      this.app = null;
-      this.world = null;
     }
+    this.app = null;
+    this.world = null;
   }
 }
