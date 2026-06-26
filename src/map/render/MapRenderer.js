@@ -65,14 +65,16 @@ export class MapRenderer {
     hostEl.addEventListener("pointerdown", (e) => {
       this._drag = { x: e.clientX, y: e.clientY, wx: this.world.x, wy: this.world.y };
     });
-    window.addEventListener("pointerup", () => {
+    this._onPointerUp = () => {
       this._drag = null;
-    });
-    window.addEventListener("pointermove", (e) => {
-      if (!this._drag) return;
+    };
+    this._onPointerMove = (e) => {
+      if (!this._drag || !this.world) return;
       this.world.x = this._drag.wx + (e.clientX - this._drag.x);
       this.world.y = this._drag.wy + (e.clientY - this._drag.y);
-    });
+    };
+    window.addEventListener("pointerup", this._onPointerUp);
+    window.addEventListener("pointermove", this._onPointerMove);
     // Zoom via roda
     hostEl.addEventListener(
       "wheel",
@@ -87,6 +89,9 @@ export class MapRenderer {
   }
 
   destroy() {
+    if (this._onPointerUp) window.removeEventListener("pointerup", this._onPointerUp);
+    if (this._onPointerMove) window.removeEventListener("pointermove", this._onPointerMove);
+    this._drag = null;
     if (this.app) {
       this.app.destroy(true, { children: true });
       this.app = null;
