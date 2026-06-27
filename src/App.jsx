@@ -8,6 +8,7 @@ import PlayersPage from "./pages/PlayersPage.jsx";
 import DicePanel from "./pages/DicePanel.jsx";
 import CampaignPage from "./pages/CampaignPage.jsx";
 import MapPage from "./pages/MapPage.jsx";
+import { MapProvider } from "./map/MapContext.jsx";
 
 // ============================================================
 // APP ROOT
@@ -16,7 +17,7 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
 
   return (
-    <>
+    <MapProvider>
       <style>{css}</style>
       <div className="app">
         <Sidebar page={page} setPage={setPage} />
@@ -25,7 +26,7 @@ export default function App() {
           <Topbar page={page} />
           <div className="content" style={page === "dm" || page === "map" ? { padding: 0 } : {}}>
             {page === "dashboard" && <Dashboard setPage={setPage} />}
-            {page === "dm" && <DMPage />}
+            {page === "dm" && <DMPage setPage={setPage} />}
             {page === "players" && <PlayersPage />}
             {page === "dice" && <DicePanel />}
             {page === "campaign" && <CampaignPage />}
@@ -33,6 +34,6 @@ export default function App() {
           </div>
         </main>
       </div>
-    </>
+    </MapProvider>
   );
 }
