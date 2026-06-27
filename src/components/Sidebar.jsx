@@ -5,6 +5,7 @@ export const PAGES = [
   { id: "dm", label: "Dungeon Master", icon: "🎭" },
   { id: "players", label: "Aventureiros", icon: "⚔️" },
   { id: "dice", label: "Dados", icon: "🎲" },
+  { id: "map", label: "Mapa", icon: "🗺️" },
   { id: "campaign", label: "Campanha", icon: "📜" },
 ];
 

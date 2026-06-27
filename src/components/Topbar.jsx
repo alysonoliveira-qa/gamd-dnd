@@ -3,6 +3,7 @@ export const PAGE_TITLES = {
   dm: "Dungeon Master — IA",
   players: "Aventureiros",
   dice: "Mesa de Dados",
+  map: "Mapa — Geração Procedural",
   campaign: "Diário da Campanha",
 };
 
