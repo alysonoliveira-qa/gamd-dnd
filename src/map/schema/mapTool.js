@@ -54,7 +54,7 @@ export function summarizeMap(model) {
 }
 
 export function executeMapTool(toolUseBlock) {
-  const toolUseId = toolUseBlock?.id;
+  const toolUseId = toolUseBlock.id;
   try {
     const request = validateMapRequest(toolUseBlock.input);
     const model = generateMap(request);

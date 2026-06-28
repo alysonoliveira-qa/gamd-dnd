@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { T } from "../tokens.js";
 import { generateMap } from "../map/generators/index.js";
 import { MapRenderer } from "../map/render/MapRenderer.js";
+import { useActiveMap } from "../map/MapContext.jsx";
 
 const TYPES = [
   { id: "dungeon", label: "Masmorra" },
@@ -10,10 +11,12 @@ const TYPES = [
 ];
 
 export default function MapPage() {
+  const { request, setActiveMapRequest } = useActiveMap();
   const hostRef = useRef(null);
   const rendererRef = useRef(null);
-  const [type, setType] = useState("dungeon");
-  const [seed, setSeed] = useState(1337);
+  const [ready, setReady] = useState(false);
+  const [type, setType] = useState(request?.type ?? "dungeon");
+  const [seed, setSeed] = useState(request?.seed ?? 1337);
   const [error, setError] = useState(null);
 
   // Monta o renderer uma vez.
@@ -24,7 +27,7 @@ export default function MapPage() {
     renderer
       .init(hostRef.current)
       .then(() => {
-        if (alive) generate();
+        if (alive) setReady(true);
       })
       .catch((e) => {
         if (alive) setError(e.message);
@@ -33,24 +36,44 @@ export default function MapPage() {
       alive = false;
       renderer.destroy();
       rendererRef.current = null;
+      setReady(false);
     };
+  }, []);
+
+  // Garante um mapa ativo na primeira montagem (se ninguém definiu ainda).
+  useEffect(() => {
+    if (!request) setActiveMapRequest({ type, seed, width: 48, height: 32 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function generate(nextSeed = seed, nextType = type) {
+  // Mantém os controles em sincronia com o mapa ativo (ex.: gerado pelo DM).
+  useEffect(() => {
+    if (request) {
+      setType(request.type);
+      if (Number.isInteger(request.seed)) setSeed(request.seed);
+    }
+  }, [request]);
+
+  // Redesenha sempre que o mapa ativo (ou a prontidão do renderer) muda.
+  useEffect(() => {
+    if (!ready || !request) return;
     try {
-      const model = generateMap({ type: nextType, seed: nextSeed, width: 48, height: 32 });
+      const model = generateMap(request);
       rendererRef.current?.render(model);
       setError(null);
     } catch (e) {
       setError(e.message);
     }
+  }, [ready, request]);
+
+  function apply(nextType = type, nextSeed = seed) {
+    setActiveMapRequest({ type: nextType, seed: nextSeed, width: 48, height: 32 });
   }
 
   function randomize() {
     const s = Math.floor(Math.random() * 2 ** 31);
     setSeed(s);
-    generate(s, type);
+    apply(type, s);
   }
 
   const btn = {
@@ -87,7 +110,7 @@ export default function MapPage() {
             }}
             onClick={() => {
               setType(tp.id);
-              generate(seed, tp.id);
+              apply(tp.id, seed);
             }}
           >
             {tp.label}
@@ -106,7 +129,7 @@ export default function MapPage() {
             background: T.bg2,
           }}
         />
-        <button style={btn} onClick={() => generate(seed, type)}>
+        <button style={btn} onClick={() => apply(type, seed)}>
           Gerar
         </button>
         <button style={{ ...btn, borderColor: T.arcane, color: T.arcaneBright }} onClick={randomize}>

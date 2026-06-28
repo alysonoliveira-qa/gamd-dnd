@@ -28,8 +28,9 @@ Se tudo der certo, o destino final é a **Steam**, empacotado com Electron.
 | ⚔️ **Fichas de Personagem** | ✅ Pronto | Criação e visualização completa de personagens D&D 5e |
 | 🎲 **Mesa de Dados** | ✅ Pronto | d4 ao d100, modificadores, críticos, histórico de rolagens |
 | 📜 **Diário de Campanha** | ✅ Pronto | Registro de sessões, arco atual e resumo da situação |
-| 💾 **Persistência Local** | 🔨 Em breve | Personagens e campanha salvos no localStorage |
-| 🗺️ **Mapa Procedural** | 🔜 Planejado | Masmorras geradas via BSP + PixiJS, integradas ao DM Agent |
+| 🗺️ **Mapa Procedural** | ✅ Pronto | Masmorras, cavernas e wilderness geradas por seed (BSP + autômato celular) e renderizadas em PixiJS |
+| 🤖 **DM gera o mapa** | ✅ Pronto | O DM Agent dispõe da ferramenta `generate_map` e cria o mapa da cena enquanto narra |
+| 💾 **Persistência Local** | 🔨 Em breve | Personagens, campanha e mapa ativo salvos no localStorage |
 | 🌐 **Multiplayer** | 🔜 Planejado | Cada jogador em sua própria máquina, dados sincronizados em tempo real |
 | 🖥️ **Electron / Steam** | 🔜 Planejado | Build desktop para distribuição |
 
@@ -39,7 +40,7 @@ Se tudo der certo, o destino final é a **Steam**, empacotado com Electron.
 
 - **Frontend:** React + Vite
 - **AI:** [Anthropic API](https://anthropic.com) — Claude Sonnet 4.6
-- **Mapas (futuro):** PixiJS — renderer 2D/WebGL
+- **Mapas:** PixiJS — renderer 2D/WebGL, geração procedural determinística por seed
 - **Desktop (futuro):** Electron
 - **Design:** Sistema de tokens próprio — sem Tailwind, sem UI library
 - **Fontes:** Cinzel · EB Garamond · JetBrains Mono (Google Fonts)
@@ -107,9 +108,16 @@ gamd-dnd/
 │   │   ├── Sidebar.jsx
 │   │   ├── Topbar.jsx
 │   │   └── ui/              # Card, Button, Field, Tag, StatBox
+│   ├── map/                 # Sistema de mapas procedural (Fase 1 + 3)
+│   │   ├── MapContext.jsx   # Estado do mapa ativo (MapProvider/useActiveMap)
+│   │   ├── core/            # rng, MapModel, tiles, conectividade
+│   │   ├── schema/          # validação do MapRequest + tool generate_map
+│   │   ├── generators/      # dungeon (BSP), cave (autômato celular), wilderness
+│   │   └── render/          # MapRenderer (PixiJS) + temas
 │   └── pages/
 │       ├── Dashboard.jsx
-│       ├── DMPage.jsx       # DM Agent — integração com Anthropic API
+│       ├── DMPage.jsx       # DM Agent — Anthropic API + tool de mapa
+│       ├── MapPage.jsx      # Página do mapa ativo
 │       ├── PlayersPage.jsx
 │       ├── CharacterSheet.jsx
 │       ├── DicePanel.jsx
@@ -125,7 +133,7 @@ gamd-dnd/
 
 O módulo mais especial do projeto. Uma instância do Claude recebe um system prompt com todo o contexto da campanha atual — nome, arco, NPCs, últimos eventos — e narra a sessão em português brasileiro com dramatismo épico.
 
-Ele solicita rolagens de dados quando necessário, reage às ações dos jogadores e mantém coerência com o lore da campanha. No futuro, também vai emitir JSON estruturado para gerar mapas procedurais automaticamente.
+Ele solicita rolagens de dados quando necessário, reage às ações dos jogadores e mantém coerência com o lore da campanha. Quando a cena leva o grupo a um novo ambiente explorável, ele usa a ferramenta `generate_map` (tool use da Anthropic API) para gerar o mapa procedural daquela cena — masmorra, caverna ou wilderness — que aparece na página Mapa.
 
 ```
 Jogador: "Sylara examina os símbolos na parede com Arcana."
@@ -138,8 +146,10 @@ DM:      "Role um d20 e some seu modificador de Arcana..."
 
 ```
 v0.1  ✅  Protótipo single-file com todos os módulos base
+v0.1  ✅  MapPage — PixiJS + geração procedural BSP/Cellular Automata
+v0.1  ✅  DM Agent integrado ao gerador de mapas (tool generate_map)
 v0.2  🔨  Migração para estrutura modular + persistência localStorage
-v0.3  🔜  MapPage — PixiJS + geração procedural BSP/Cellular Automata
+v0.3  🔜  Grid tático — tokens, fog of war, medição (Fase 2)
 v0.4  🔜  Multiplayer — jogadores conectados em tempo real
 v0.5  🔜  Electron — build desktop para Windows/Mac/Linux
 v1.0  🔜  Steam
