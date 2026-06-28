@@ -82,14 +82,26 @@ export default function DMPage({ setPage }) {
             tools: [GENERATE_MAP_TOOL],
           }),
         });
+        if (!res.ok) {
+          setMessages((m) => [
+            ...m,
+            { role: "dm", content: "*(As energias arcanas falham — o Mestre não responde no momento. Tente novamente.)*" },
+          ]);
+          finished = true;
+          break;
+        }
         const data = await res.json();
 
         if (data.stop_reason === "tool_use") {
+          // Texto que o modelo eventualmente emite junto com o tool_use.
+          const preface = (data.content || []).find((b) => b.type === "text")?.text;
+          if (preface) setMessages((m) => [...m, { role: "dm", content: preface }]);
+
           const toolBlocks = (data.content || []).filter((b) => b.type === "tool_use");
           const results = toolBlocks.map(executeMapTool);
           for (const r of results) {
-            if (r.request) setActiveMapRequest(r.request);
-            if (r.model) {
+            if (r.request) {
+              setActiveMapRequest(r.request);
               setMessages((m) => [...m, { role: "map", summary: r.toolResult.content }]);
             }
           }
